@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "starter",
+            "label": "complotter",
             "options": {
                 "cwd": "${workspaceFolder}"
                },
@@ -12,7 +12,27 @@
             "args": [
                 "-f",
                 ".vscode/makefile",
-                "starter"
+                "complotter"
+            ],
+
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "rebuild",
+            "options": {
+                "cwd": "${workspaceFolder}"
+               },
+            "command": "mingw32-make.exe",
+            "args": [
+                "-f",
+                ".vscode/makefile",
+                "rebuild"
             ],
 
             "problemMatcher": [
