@@ -8,7 +8,7 @@ INCS = -I./include \
 
 LIBS = \
 	-lgdiplus -lgdi32 -lcomdlg32 -lstdc++fs \
-	#-mwindows
+	-mwindows
 
 static_link_flags = -static-libstdc++ -static-libgcc -static -lComctl32
 
