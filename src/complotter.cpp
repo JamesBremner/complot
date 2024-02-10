@@ -63,22 +63,27 @@ cGUI::cGUI()
         // packet has been received
 
         auto r = myTalker.readData();
-        myRcvList.add( "read " + std::to_string( r.size() ) + " bytes");
-        std::stringstream ss;
-        ss << std::hex;
-        int k = 0;
-        for( auto c : r )
-        {
-            ss << "0x" << (int)c << " ";
-            k++;
-            if( k > 9 )
-            {
-                myRcvList.add( ss.str() );
-                ss.str("");
-                k = 0;
-            }
-        }
-        myRcvList.add( ss.str() );
+        double data_point;
+        memcpy(&data_point,r.data(),8);
+        myRcvList.add(std::to_string(data_point));
+
+        //myRcvList.add( "read " + std::to_string( r.size() ) + " bytes");
+        // std::stringstream ss;
+        // ss << std::hex;
+        // int k = 0;
+        // for( auto c : r )
+        // {
+        //     ss << "0x" << (int)c << " ";
+        //     k++;
+        //     if( k > 9 )
+        //     {
+        //         myRcvList.add( ss.str() );
+        //         ss.str("");
+        //         k = 0;
+        //     }
+        // }
+        // myRcvList.add( ss.str() );
+
         myRcvList.update();
 
         // wait for next

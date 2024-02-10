@@ -6,70 +6,71 @@ class cGUI
 public:
     cGUI();
     void run();
+
 private:
-    wex::gui&               myForm;
-    wex::label&             myPortlb;
-    wex::editbox&           myPorteb;
-    wex::button&            myConnectbn;
-    wex::button&            myTxbn;
-    wex::com&               myTalker;
-    wex::list&              myRcvList;
+    wex::gui &myForm;
+    wex::label &myPortlb;
+    wex::editbox &myPorteb;
+    wex::button &myConnectbn;
+    wex::button &myTxbn;
+    wex::com &myTalker;
+    wex::list &myRcvList;
 };
 
 cGUI::cGUI()
-    : myForm( wex::maker::make() )
-    , myPortlb( wex::maker::make<wex::label>( myForm ))
-    , myPorteb( wex::maker::make<wex::editbox>( myForm ))
-    , myConnectbn( wex::maker::make<wex::button>( myForm ))
-    , myTxbn( wex::maker::make<wex::button>( myForm ))
-    , myTalker( wex::maker::make<wex::com>( myForm ))
-    , myRcvList( wex::maker::make<wex::list>( myForm ))
+    : myForm(wex::maker::make()), myPortlb(wex::maker::make<wex::label>(myForm)), myPorteb(wex::maker::make<wex::editbox>(myForm)), myConnectbn(wex::maker::make<wex::button>(myForm)), myTxbn(wex::maker::make<wex::button>(myForm)), myTalker(wex::maker::make<wex::com>(myForm)), myRcvList(wex::maker::make<wex::list>(myForm))
 {
-    myForm.move( 50,50,450,500);
+    myForm.move(50, 50, 450, 500);
     myForm.text("COMDeviceSim");
 
-    myPortlb.move(20,20,100,30);
+    myPortlb.move(20, 20, 100, 30);
     myPortlb.text("COM Port");
-    myPorteb.move(140,20,50,30);
-    myPorteb.text("9");
-    myConnectbn.move( 210, 20, 100,30);
+    myPorteb.move(140, 20, 50, 30);
+    myPorteb.text("8");
+    myConnectbn.move(210, 20, 100, 30);
     myConnectbn.bgcolor(0x9090FF);
     myConnectbn.text("Connect");
 
-    myTxbn.move( 330,20,50,30);
+    myTxbn.move(330, 20, 50, 30);
     myTxbn.text("TX");
     myTxbn.tooltip("Send some data");
     myTxbn.events().click([&]
-        {
-            myTalker.write("some data");
-        }    );
+                          {
+            static int p = 0;
+                 double data_point;
 
-    myRcvList.move( 20,70, 400,300 );
+            data_point = 10 * sin( p++ / 10.0 );
+
+            std::vector<unsigned char> msgbuf(8);
+            memcpy(msgbuf.data(),&data_point,8);
+
+            myTalker.write(msgbuf);
+            // myTalker.write(std::to_string(data_point).c_str());
+             });
+
+    myRcvList.move(20, 70, 400, 300);
 
     myConnectbn.events().click([&]
-    {
-        // user wants to connect to talker
+                               {
+                                   // user wants to connect to talker
 
-        myTalker.port( myPorteb.text() );
-        myTalker.open();
-        if( ! myTalker.isOpen() )
-        {
-            wex::msgbox mb("Open failed");
-            exit(1);
-        }
-        myConnectbn.text("Connected");
-        myConnectbn.bgcolor(0x90FF90);
-        myConnectbn.enable(false);
-        myConnectbn.update();
+                                   myTalker.port(myPorteb.text());
+                                   myTalker.open();
+                                   if (!myTalker.isOpen())
+                                   {
+                                       wex::msgbox mb("Open failed");
+                                       exit(1);
+                                   }
+                                   myConnectbn.text("Connected");
+                                   myConnectbn.bgcolor(0x90FF90);
+                                   myConnectbn.enable(false);
+                                   myConnectbn.update();
 
-        // ready to read the first packet
-        myTalker.read_async( -1 );
+                                   // ready to read the first packet
+                                   myTalker.read_async(-1); });
 
-
-    });
-
-    myForm.events().asyncReadComplete([&]( int id )
-    {
+    myForm.events().asyncReadComplete([&](int id)
+                                      {
         // packet has been received
 
         auto r = myTalker.readData();
@@ -93,8 +94,7 @@ cGUI::cGUI()
 
         // wait for next
 
-        myTalker.read_async( -1 );
-    });
+        myTalker.read_async( -1 ); });
 
     myForm.show();
 }
@@ -108,4 +108,3 @@ int main()
     cGUI gui;
     gui.run();
 }
-
