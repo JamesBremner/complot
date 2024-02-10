@@ -1,5 +1,6 @@
 #include <sstream>
 #include "com.h"
+#include "plot2d.h"
 
 class cGUI
 {
@@ -13,15 +14,21 @@ private:
     wex::button&            myConnectbn;
     wex::com&               myTalker;
     wex::list&              myRcvList;
+    wex::plot::plot&        thePlot;
+    wex::plot::trace&       t1;
+
+    void ConstructPlot();
 };
 
 cGUI::cGUI()
     : myForm( wex::maker::make() )
     , myPortlb( wex::maker::make<wex::label>( myForm ))
     , myPorteb( wex::maker::make<wex::editbox>( myForm ))
-    , myConnectbn( wex::maker::make<wex::button>( myForm ))
+    , myConnectbn( wex::maker::make<wex::button>( myForm )) 
     , myTalker( wex::maker::make<wex::com>( myForm ))
     , myRcvList( wex::maker::make<wex::list>( myForm ))
+    , thePlot( wex::maker::make<wex::plot::plot>(myForm))
+    , t1(thePlot.AddRealTimeTrace( 100 ))
 {
     myForm.move( 50,50,850,500);
     myForm.text("COMPlotter");
@@ -34,7 +41,9 @@ cGUI::cGUI()
     myConnectbn.bgcolor(0x9090FF);
     myConnectbn.text("Connect");
 
-    myRcvList.move( 20,70, 400,300 );
+    ConstructPlot();
+
+    //myRcvList.move( 20,70, 400,300 );
 
     myConnectbn.events().click([&]
     {
@@ -65,26 +74,12 @@ cGUI::cGUI()
         auto r = myTalker.readData();
         double data_point;
         memcpy(&data_point,r.data(),8);
-        myRcvList.add(std::to_string(data_point));
 
-        //myRcvList.add( "read " + std::to_string( r.size() ) + " bytes");
-        // std::stringstream ss;
-        // ss << std::hex;
-        // int k = 0;
-        // for( auto c : r )
-        // {
-        //     ss << "0x" << (int)c << " ";
-        //     k++;
-        //     if( k > 9 )
-        //     {
-        //         myRcvList.add( ss.str() );
-        //         ss.str("");
-        //         k = 0;
-        //     }
-        // }
-        // myRcvList.add( ss.str() );
+        t1.add( data_point );
+        thePlot.update();
 
-        myRcvList.update();
+        //myRcvList.add(std::to_string(data_point));
+        //myRcvList.update();
 
         // wait for next
 
@@ -96,6 +91,26 @@ cGUI::cGUI()
 void cGUI::run()
 {
     myForm.run();
+}
+
+void cGUI::ConstructPlot()
+{
+    // construct plot to be drawn on form
+    thePlot.bgcolor(0);
+    // thePlot.Grid( true );
+    //  resize plot when form resizes
+    myForm.events().resize([&](int w, int h)
+                       {
+        thePlot.size( w-100, h-200 );
+        thePlot.move( 30, 100 );
+        thePlot.update(); });
+
+                // construct plot trace
+        // displaying 100 points before they scroll off the plot
+        //plot::trace& t1 = thePlot.AddRealTimeTrace( 100 );
+
+        // plot in blue
+        t1.color( 0xFF0000 );
 }
 
 int main()
