@@ -10,6 +10,7 @@ public:
 private:
     wex::gui &myForm;
     wex::label &myPortlb;
+    wex::label &mySpeedlb;
     wex::editbox &myPorteb;
     wex::editbox &mySpeedeb;
     wex::button &myConnectbn;
@@ -20,10 +21,12 @@ private:
 };
 
 cGUI::cGUI()
-    : myForm(wex::maker::make()), myPortlb(wex::maker::make<wex::label>(myForm)), 
-    myPorteb(wex::maker::make<wex::editbox>(myForm)),
-    mySpeedeb(wex::maker::make<wex::editbox>(myForm)),
-     myConnectbn(wex::maker::make<wex::button>(myForm)), myTxbn(wex::maker::make<wex::button>(myForm)), myTalker(wex::maker::make<wex::com>(myForm)), myRcvList(wex::maker::make<wex::list>(myForm))
+    : myForm(wex::maker::make()),
+     myPortlb(wex::maker::make<wex::label>(myForm)),
+     mySpeedlb(wex::maker::make<wex::label>(myForm)),
+      myPorteb(wex::maker::make<wex::editbox>(myForm)),
+      mySpeedeb(wex::maker::make<wex::editbox>(myForm)),
+      myConnectbn(wex::maker::make<wex::button>(myForm)), myTxbn(wex::maker::make<wex::button>(myForm)), myTalker(wex::maker::make<wex::com>(myForm)), myRcvList(wex::maker::make<wex::list>(myForm))
 {
     myForm.move(50, 50, 450, 500);
     myForm.text("COMDeviceSim");
@@ -32,30 +35,38 @@ cGUI::cGUI()
     myPortlb.text("COM Port");
     myPorteb.move(140, 20, 50, 30);
     myPorteb.text("8");
-    mySpeedeb.move(50, 50, 50, 30);
+    mySpeedlb.move(5,100,80,30);
+    mySpeedlb.text("Tx Speed");
+    mySpeedeb.move(100, 100, 50, 30);
     mySpeedeb.text("10");
+    mySpeedeb.tooltip("frames/sec");
     myConnectbn.move(210, 20, 100, 30);
     myConnectbn.bgcolor(0x9090FF);
     myConnectbn.text("Connect");
 
     myTxbn.move(330, 20, 50, 30);
     myTxbn.text("TX");
-    myTxbn.tooltip("Send some data");
-    myTxbn.events().click([&]
-                          { myTxTimer = new wex::timer(myForm, 100); });
+    myTxbn.tooltip("Start sending data");
+    myTxbn.events().click(
+        [&]
+        {
+            myTxTimer = new wex::timer(myForm,
+                                       1000 / atoi(mySpeedeb.text().c_str()));
+        });
 
-    myForm.events().timer([this](int id)
-                          {
-                              static int p = 0;
-                              double data_point;
+    myForm.events().timer(
+        [this](int id)
+        {
+            static int p = 0;
+            double data_point;
 
-                              data_point = 10 * sin(p++ / 10.0);
+            data_point = 10 * sin(p++ / 10.0);
 
-                              std::vector<unsigned char> msgbuf(8);
-                              memcpy(msgbuf.data(), &data_point, 8);
+            std::vector<unsigned char> msgbuf(8);
+            memcpy(msgbuf.data(), &data_point, 8);
 
-                              myTalker.write(msgbuf);
-                          });
+            myTalker.write(msgbuf);
+        });
 
     // myRcvList.move(20, 70, 400, 300);
 
