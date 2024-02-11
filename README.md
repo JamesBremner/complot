@@ -14,3 +14,14 @@ _On read complete_
 
 _On plot update timer_
 - Update plot with data in FIFO buffer
+
+# Usage
+
+- Set up a virtual null modem between COM ports ( use default 8 & 9 )
+- Start comdevicesim app
+- Connect port
+- Start complotter app
+- Connect port
+- in device simulator set frame rate
+- in device simulator click TX button
+- Click TX button in
