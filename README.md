@@ -25,3 +25,5 @@ _On plot update timer_
 - in device simulator set frame rate
 - in device simulator click TX button
 - Click TX button in
+
+![image](https://github.com/JamesBremner/complot/assets/2046227/421dcb2d-58ed-4591-9489-b52e4845bf4d)
