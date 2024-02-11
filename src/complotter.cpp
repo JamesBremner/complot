@@ -29,49 +29,62 @@ cGUI::cGUI()
     myForm.text("COMPlotter");
 
     myPortlb.move(20, 20, 100, 30);
-    myPortlb.text("COM Port");
-    myPorteb.move(140, 20, 50, 30);
-    myPorteb.text("9");
-    myConnectbn.move(210, 20, 100, 30);
-    myConnectbn.bgcolor(0x9090FF);
-    myConnectbn.text("Connect");
+    myPortlb.text("COM Port 9");
+    // myPorteb.move(140, 20, 50, 30);
+     myPorteb.text("9");
+    // myPorteb.enable(false);
+    // myConnectbn.move(210, 20, 100, 30);
+    // myConnectbn.bgcolor(0x9090FF);
+    // myConnectbn.text("Connect");
 
     ConstructPlot();
 
     // myRcvList.move( 20,70, 400,300 );
 
-    myConnectbn.events().click([&]
-                               {
-                                   // user wants to connect to talker
+    // myConnectbn.events().click(
+    //     [&]
+    //     {
+            // user wants to connect to talker
 
-                                   myTalker.port(myPorteb.text());
-                                   myTalker.open();
-                                   if (!myTalker.isOpen())
-                                   {
-                                       wex::msgbox mb("Open failed");
-                                       exit(1);
-                                   }
-                                   myConnectbn.text("Connected");
-                                   myConnectbn.bgcolor(0x90FF90);
-                                   myConnectbn.enable(false);
-                                   myConnectbn.update();
+            myTalker.port(myPorteb.text());
+            myTalker.open();
+            if (!myTalker.isOpen())
+            {
+                wex::msgbox mb("Open failed");
+                exit(1);
+            }
+            myConnectbn.text("Connected");
+            myConnectbn.bgcolor(0x90FF90);
+            myConnectbn.enable(false);
+            myConnectbn.update();
 
-                                   // ready to read the first packet
-                                   myTalker.read_async(-1); });
+            // ready to read the first packet
+            myTalker.read_async(-1);
+        // });
 
-    myForm.events().asyncReadComplete([&](int id)
-                                      {
-        // packet has been received
+    myForm.events().asyncReadComplete(
+        [&](int id)
+        {
+            // packet has been received
 
-        auto r = myTalker.readData();
-        double data_point;
-        memcpy(&data_point,r.data(),8);
+            static bool first = true;
+            if (first)
+            {
+                first = false;
+                myTalker.read_async(-1);
+                return;
+            }
 
-        t1.add( data_point );
+            auto r = myTalker.readData();
+            double data_point;
+            memcpy(&data_point, r.data(), 8);
 
-        // wait for next
+            t1.add(data_point);
 
-        myTalker.read_async( -1 ); });
+            // wait for next
+
+            myTalker.read_async(-1);
+        });
 
     myForm.show();
 }
