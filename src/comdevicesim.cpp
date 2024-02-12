@@ -11,8 +11,10 @@ private:
     wex::gui &myForm;
     wex::label &myPortlb;
     wex::label &mySpeedlb;
+    wex::label &myFrameLengthlb;
     wex::editbox &myPorteb;
     wex::editbox &mySpeedeb;
+    wex::editbox &myFrameLengtheb;
     wex::button &myConnectbn;
     wex::button &myTxbn;
     wex::com &myTalker;
@@ -24,8 +26,10 @@ cGUI::cGUI()
     : myForm(wex::maker::make()),
      myPortlb(wex::maker::make<wex::label>(myForm)),
      mySpeedlb(wex::maker::make<wex::label>(myForm)),
+     myFrameLengthlb(wex::maker::make<wex::label>(myForm)),
       myPorteb(wex::maker::make<wex::editbox>(myForm)),
       mySpeedeb(wex::maker::make<wex::editbox>(myForm)),
+      myFrameLengtheb(wex::maker::make<wex::editbox>(myForm)),
       myConnectbn(wex::maker::make<wex::button>(myForm)), myTxbn(wex::maker::make<wex::button>(myForm)), myTalker(wex::maker::make<wex::com>(myForm)), myRcvList(wex::maker::make<wex::list>(myForm))
 {
     myForm.move(50, 50, 450, 500);
@@ -35,11 +39,19 @@ cGUI::cGUI()
     myPortlb.text("COM Port");
     myPorteb.move(140, 20, 50, 30);
     myPorteb.text("8");
+
     mySpeedlb.move(5,100,80,30);
     mySpeedlb.text("Tx Speed");
     mySpeedeb.move(100, 100, 50, 30);
     mySpeedeb.text("10");
     mySpeedeb.tooltip("frames/sec");
+
+    myFrameLengthlb.move(200,100,90,30);
+    myFrameLengthlb.text("Frame Length");
+    myFrameLengtheb.move(300, 100, 50, 30);
+    myFrameLengtheb.text("10");
+    myFrameLengtheb.tooltip("Bytes");
+
     myConnectbn.move(210, 20, 100, 30);
     myConnectbn.bgcolor(0x9090FF);
     myConnectbn.text("Connect");
@@ -57,14 +69,20 @@ cGUI::cGUI()
     myForm.events().timer(
         [this](int id)
         {
+            // next data point on sine wave
             static int p = 0;
             double data_point;
-
             data_point = 10 * sin(p++ / 10.0);
 
-            std::vector<unsigned char> msgbuf(8);
+            // build frame
+            int len = atoi(myFrameLengtheb.text().c_str());
+            if( len < 8 )
+                len = 8;
+            len *= 8;
+            std::vector<unsigned char> msgbuf(len);
             memcpy(msgbuf.data(), &data_point, 8);
 
+            // send the frame
             myTalker.write(msgbuf);
         });
 
