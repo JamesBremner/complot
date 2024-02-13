@@ -72,7 +72,7 @@ cGUI::cGUI()
             // next data point on sine wave
             static int p = 0;
             double data_point;
-            data_point = 10 * sin(p++ / 10.0);
+            data_point = 10 + 10 * sin(p++ / 10.0);
 
             // build frame
             int len = atoi(myFrameLengtheb.text().c_str());

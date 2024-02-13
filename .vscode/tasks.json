@@ -52,7 +52,7 @@
             "args": [
                 "-f",
                 ".vscode/makefile",
-                "complotter"
+                "specplotter"
             ],
 
             "problemMatcher": [
