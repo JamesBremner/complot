@@ -47,10 +47,10 @@ cGUI::cGUI()
     mySpeedeb.tooltip("frames/sec");
 
     myFrameLengthlb.move(200,100,90,30);
-    myFrameLengthlb.text("Frame Length");
+    myFrameLengthlb.text("Freq Count");
     myFrameLengtheb.move(300, 100, 50, 30);
     myFrameLengtheb.text("10");
-    myFrameLengtheb.tooltip("Bytes");
+    myFrameLengtheb.tooltip("Number of 8 byte data points in each frame");
 
     myConnectbn.move(210, 20, 100, 30);
     myConnectbn.bgcolor(0x9090FF);
@@ -76,11 +76,15 @@ cGUI::cGUI()
 
             // build frame
             int len = atoi(myFrameLengtheb.text().c_str());
-            if( len < 8 )
-                len = 8;
-            len *= 8;
-            std::vector<unsigned char> msgbuf(len);
-            memcpy(msgbuf.data(), &data_point, 8);
+            if( len < 1 )
+                len = 1;
+            std::vector<unsigned char> msgbuf(len * 8 );
+            unsigned char* pbuf = msgbuf.data();
+            for( int k = 0; k < len; k++ ) {
+                memcpy(pbuf , &data_point, 8);
+                pbuf += 8;
+                data_point += 0.5;
+            }
 
             // send the frame
             myTalker.write(msgbuf);

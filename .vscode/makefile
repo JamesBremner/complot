@@ -23,6 +23,8 @@ OBJ_complotter = \
 	$(ODIR)/complotter.o 
 OBJ_comdevicesim = \
 	$(ODIR)/comdevicesim.o 
+OBJ_specplotter = \
+	$(ODIR)/spectrumPlotter.o 
 
 ### COMPILE
 
@@ -35,12 +37,17 @@ complotter: $(OBJ_complotter)
 	-o bin/complotter.exe $^  \
 	$(static_link_flags) $(LIBS)
 
+specplotter: $(OBJ_specplotter)
+	g++ $(OPT) \
+	-o bin/specplotter.exe $^  \
+	$(static_link_flags) $(LIBS)
+
 comdevicesim: $(OBJ_comdevicesim)
 	g++ $(OPT) \
 	-o bin/comdevicesim.exe $^  \
 	$(static_link_flags) $(LIBS)
 
-rebuild: clean complotter comdevicesim
+rebuild: clean specplotter comdevicesim
 	
 .PHONY: clean
 clean:
