@@ -50,7 +50,7 @@ cGUI::cGUI()
     myFrameLengthlb.text("Freq Count");
     myFrameLengtheb.move(300, 100, 50, 30);
     myFrameLengtheb.text("10");
-    myFrameLengtheb.tooltip("Number of 8 byte data points in each frame");
+    myFrameLengtheb.tooltip("Number of data points in each spectrum");
 
     myConnectbn.move(210, 20, 100, 30);
     myConnectbn.bgcolor(0x9090FF);
@@ -69,6 +69,8 @@ cGUI::cGUI()
     myForm.events().timer(
         [this](int id)
         {
+            const int myDataLength = 8;
+            
             // next data point on sine wave
             static int p = 0;
             double data_point;
@@ -78,11 +80,11 @@ cGUI::cGUI()
             int len = atoi(myFrameLengtheb.text().c_str());
             if( len < 1 )
                 len = 1;
-            std::vector<unsigned char> msgbuf(len * 8 );
+            std::vector<unsigned char> msgbuf(len * myDataLength );
             unsigned char* pbuf = msgbuf.data();
             for( int k = 0; k < len; k++ ) {
-                memcpy(pbuf , &data_point, 8);
-                pbuf += 8;
+                memcpy(pbuf , &data_point, myDataLength);
+                pbuf += myDataLength;
                 data_point += 0.5;
             }
 

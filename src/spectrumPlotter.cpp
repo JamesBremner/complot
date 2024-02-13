@@ -27,7 +27,8 @@ private:
     wex::com &myTalker;
 
     // data
-    int myDataLengthDoubles;
+    int myDataCount;              // number of frequencies in spectra
+    int myDataLength;             // number of bytes in each spectrum data point
     std::vector<double> myRecent; // the most recently arrived data
 
     // event handlers
@@ -45,7 +46,9 @@ cGUI::cGUI()
       myFreqlb(wex::maker::make<wex::label>(myForm)), myFreqeb(wex::maker::make<wex::editbox>(myForm)),
       myConnectbn(wex::maker::make<wex::button>(myForm)), myTalker(wex::maker::make<wex::com>(myForm)),
       thePlot(wex::maker::make<wex::plot::plot>(myForm)),
-      t1(thePlot.AddScatterTrace())
+      t1(thePlot.AddScatterTrace()),
+     myDataLength( 8 )
+
 {
     myForm.move(50, 50, 850, 500);
     myForm.text("Spectrum Plotter");
@@ -117,10 +120,10 @@ void cGUI::COMReadHandler()
     memcpy(
         myRecent.data(),
         myTalker.readData().data(),
-        myDataLengthDoubles * 8);
+        myDataCount * myDataLength);
 
     // wait for next
-    myTalker.read_async(myDataLengthDoubles * 8);
+    myTalker.read_async(myDataCount * myDataLength);
 }
 
 void cGUI::COMConnectHandler()
@@ -141,11 +144,11 @@ void cGUI::COMConnectHandler()
     myConnectbn.update();
 
     // data storage
-    myDataLengthDoubles = atoi(myFreqeb.text().c_str());
-    myRecent.resize(myDataLengthDoubles);
+    myDataCount = atoi(myFreqeb.text().c_str());
+    myRecent.resize(myDataCount);
 
     // plot x values
-    std::vector<double> vx(myDataLengthDoubles);
+    std::vector<double> vx(myDataCount);
     int v = 0;
     for (auto &x : vx)
     {
@@ -155,7 +158,7 @@ void cGUI::COMConnectHandler()
     t1.setScatterX(vx);
 
     // ready to read the first packet
-    myTalker.read_async(myDataLengthDoubles * 8);
+    myTalker.read_async(myDataCount * myDataLength);
 }
 
 void cGUI::PlotTimerHandler()
