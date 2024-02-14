@@ -19,7 +19,8 @@ High performance plotting of spectrum data from COM port
 - in device simulator set frame rate
 - in device simulator click TX button
 
-![image](https://github.com/JamesBremner/complot/assets/2046227/25dbfc7c-7333-4140-9305-3a28949bb1dd)
+![image](https://github.com/JamesBremner/complot/assets/2046227/05375f4d-0d2f-4d51-91bb-7c995de714a9)
+
 
 
 # complot
