@@ -46,7 +46,7 @@ cGUI::cGUI()
       myFreqlb(wex::maker::make<wex::label>(myForm)), myFreqeb(wex::maker::make<wex::editbox>(myForm)),
       myConnectbn(wex::maker::make<wex::button>(myForm)), myTalker(wex::maker::make<wex::com>(myForm)),
       thePlot(wex::maker::make<wex::plot::plot>(myForm)),
-      t1(thePlot.AddScatterTrace()),
+      t1(thePlot.AddStaticTrace()),
      myDataLength( 8 )
 
 {
@@ -102,6 +102,7 @@ void cGUI::run()
 
 void cGUI::ConstructPlot()
 {
+    // black background
     thePlot.bgcolor(0);
 
     // plot in blue
@@ -119,7 +120,7 @@ void cGUI::COMReadHandler()
     // store received data
     memcpy(
         myRecent.data(),
-        myTalker.readData().data(),
+         myTalker.readData().data(),
         myDataCount * myDataLength);
 
     // wait for next
@@ -145,17 +146,7 @@ void cGUI::COMConnectHandler()
 
     // data storage
     myDataCount = atoi(myFreqeb.text().c_str());
-    myRecent.resize(myDataCount);
-
-    // plot x values
-    std::vector<double> vx(myDataCount);
-    int v = 0;
-    for (auto &x : vx)
-    {
-        x = v;
-        v += 10;
-    }
-    t1.setScatterX(vx);
+    myRecent.resize(myDataCount,0);
 
     // ready to read the first packet
     myTalker.read_async(myDataCount * myDataLength);

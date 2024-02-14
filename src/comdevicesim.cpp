@@ -70,29 +70,31 @@ cGUI::cGUI()
         [this](int id)
         {
             const int myDataLength = 8;
-            
-            // next data point on sine wave
-            static int p = 0;
-            double data_point;
-            data_point = 10 + 10 * sin(p++ / 10.0);
 
-            // build frame
+            // build spectrum of requested length
             int len = atoi(myFrameLengtheb.text().c_str());
             if( len < 1 )
                 len = 1;
-            std::vector<unsigned char> msgbuf(len * myDataLength );
-            unsigned char* pbuf = msgbuf.data();
-            for( int k = 0; k < len; k++ ) {
-                memcpy(pbuf , &data_point, myDataLength);
-                pbuf += myDataLength;
-                data_point += 0.5;
+            std::vector<double> spectrum(len,1);
+
+            // add some spikes
+            for( int spike = 5; spike < len; spike += 20 )
+            {
+                spectrum[spike] = 5;
+                spectrum[spike+1] = 30;
+                spectrum[spike+2] = 10;
             }
+
+            // copy to tx buffer
+            std::vector<unsigned char> msgbuf(len * myDataLength );
+            memcpy(
+                msgbuf.data(),
+                spectrum.data(),
+                len * myDataLength            );
 
             // send the frame
             myTalker.write(msgbuf);
         });
-
-    // myRcvList.move(20, 70, 400, 300);
 
     myConnectbn.events().click([&]
                                {
