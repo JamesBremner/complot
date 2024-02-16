@@ -17,6 +17,8 @@ private:
     wex::label &myFreqlb;
     wex::editbox &myFreqeb;
     wex::button &myConnectbn;
+    wex::label &myDatalb;
+    wex::choice &myDatach;
 
     // plot
     wex::plot::plot &thePlot;
@@ -27,9 +29,10 @@ private:
     wex::com &myTalker;
 
     // data
-    int myDataCount;              // number of frequencies in spectra
-    int myDataLength;             // number of bytes in each spectrum data point
-    std::vector<double> myRecent; // the most recently arrived data
+    int myDataCount;                   // number of frequencies in spectra
+    int myDataLength;                  // number of bytes in each spectrum data point
+    std::vector<double> myRecentDbl;   // the most recently arrived data
+    std::vector<uint16_t> myRecentU16; // the most recently arrived data
 
     // event handlers
     void ConstructPlot();
@@ -44,10 +47,11 @@ cGUI::cGUI()
     : myForm(wex::maker::make()),
       myPortlb(wex::maker::make<wex::label>(myForm)), myPorteb(wex::maker::make<wex::editbox>(myForm)),
       myFreqlb(wex::maker::make<wex::label>(myForm)), myFreqeb(wex::maker::make<wex::editbox>(myForm)),
+      myDatalb(wex::maker::make<wex::label>(myForm)), myDatach(wex::maker::make<wex::choice>(myForm)),
       myConnectbn(wex::maker::make<wex::button>(myForm)), myTalker(wex::maker::make<wex::com>(myForm)),
       thePlot(wex::maker::make<wex::plot::plot>(myForm)),
       t1(thePlot.AddStaticTrace()),
-     myDataLength( 8 )
+      myDataLength(8)
 
 {
     myForm.move(50, 50, 850, 500);
@@ -65,6 +69,14 @@ cGUI::cGUI()
     myFreqlb.text("Freq Count");
     myFreqeb.move(450, 20, 50, 30);
     myFreqeb.text("100");
+
+    myDatalb.move(530, 20, 90, 30);
+    myDatalb.text("Data");
+    myDatach.move(600, 20, 200, 30);
+    myDatach.add("Double");
+    myDatach.select(0);
+    myDatach.add("unsigned 16 bit integer");
+    myDatach.tooltip("Data points");
 
     ConstructPlot();
 
@@ -118,10 +130,21 @@ void cGUI::ConstructPlot()
 void cGUI::COMReadHandler()
 {
     // store received data
-    memcpy(
-        myRecent.data(),
-         myTalker.readData().data(),
-        myDataCount * myDataLength);
+    switch (myDataLength)
+    {
+    case 8:
+        memcpy(
+            myRecentDbl.data(),
+            myTalker.readData().data(),
+            myDataCount * myDataLength);
+        break;
+    case 2:
+        memcpy(
+            myRecentU16.data(),
+            myTalker.readData().data(),
+            myDataCount * myDataLength);
+        break;
+    }
 
     // wait for next
     myTalker.read_async(myDataCount * myDataLength);
@@ -146,7 +169,17 @@ void cGUI::COMConnectHandler()
 
     // data storage
     myDataCount = atoi(myFreqeb.text().c_str());
-    myRecent.resize(myDataCount,0);
+    myRecentDbl.resize(myDataCount, 0);
+    myRecentU16.resize(myDataCount, 0);
+    switch (myDatach.selectedIndex())
+    {
+    case 0:
+        myDataLength = 8;
+        break;
+    case 1:
+        myDataLength = 2;
+        break;
+    }
 
     // ready to read the first packet
     myTalker.read_async(myDataCount * myDataLength);
@@ -157,7 +190,18 @@ void cGUI::PlotTimerHandler()
     if (!myTalker.isOpen())
         return;
 
-    t1.set(myRecent);
+    switch (myDataLength)
+    {
+    case 8:
+        t1.set(myRecentDbl);
+        break;
+    case 2:
+        myRecentDbl.clear();
+        for( auto v : myRecentU16)
+            myRecentDbl.push_back( v );
+        t1.set(myRecentDbl);
+        break;
+    }
 
     thePlot.update();
 }
@@ -165,10 +209,10 @@ void cGUI::PlotTimerHandler()
 void cGUI::debugText()
 {
     for (int i = 0; i < 10; i++)
-        std::cout << myRecent[i] << " ";
+        std::cout << myRecentDbl[i] << " ";
     std::cout << "... ";
-    for (int i = myRecent.size() - 10; i < myRecent.size(); i++)
-        std::cout << myRecent[i] << " ";
+    for (int i = myRecentDbl.size() - 10; i < myRecentDbl.size(); i++)
+        std::cout << myRecentDbl[i] << " ";
     std::cout << "\n\n";
 }
 

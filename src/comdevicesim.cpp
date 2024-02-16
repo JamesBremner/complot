@@ -12,6 +12,7 @@ private:
     wex::label &myPortlb;
     wex::label &mySpeedlb;
     wex::label &myFrameLengthlb;
+    wex::label &myDatalb;
     wex::editbox &myPorteb;
     wex::editbox &mySpeedeb;
     wex::editbox &myFrameLengtheb;
@@ -20,17 +21,21 @@ private:
     wex::com &myTalker;
     wex::list &myRcvList;
     wex::timer *myTxTimer;
+    wex::choice &myDatach;
 };
 
 cGUI::cGUI()
     : myForm(wex::maker::make()),
-     myPortlb(wex::maker::make<wex::label>(myForm)),
-     mySpeedlb(wex::maker::make<wex::label>(myForm)),
-     myFrameLengthlb(wex::maker::make<wex::label>(myForm)),
+      myPortlb(wex::maker::make<wex::label>(myForm)),
+      mySpeedlb(wex::maker::make<wex::label>(myForm)),
+      myFrameLengthlb(wex::maker::make<wex::label>(myForm)),
+      myDatalb(wex::maker::make<wex::label>(myForm)),
       myPorteb(wex::maker::make<wex::editbox>(myForm)),
       mySpeedeb(wex::maker::make<wex::editbox>(myForm)),
       myFrameLengtheb(wex::maker::make<wex::editbox>(myForm)),
-      myConnectbn(wex::maker::make<wex::button>(myForm)), myTxbn(wex::maker::make<wex::button>(myForm)), myTalker(wex::maker::make<wex::com>(myForm)), myRcvList(wex::maker::make<wex::list>(myForm))
+      myDatach(wex::maker::make<wex::choice>(myForm)),
+      myConnectbn(wex::maker::make<wex::button>(myForm)), myTxbn(wex::maker::make<wex::button>(myForm)),
+      myTalker(wex::maker::make<wex::com>(myForm)), myRcvList(wex::maker::make<wex::list>(myForm))
 {
     myForm.move(50, 50, 450, 500);
     myForm.text("COMDeviceSim");
@@ -40,17 +45,28 @@ cGUI::cGUI()
     myPorteb.move(140, 20, 50, 30);
     myPorteb.text("8");
 
-    mySpeedlb.move(5,100,80,30);
+    int y = 100;
+    mySpeedlb.move(5, y, 80, 30);
     mySpeedlb.text("Tx Speed");
-    mySpeedeb.move(100, 100, 50, 30);
+    mySpeedeb.move(100, y, 50, 30);
     mySpeedeb.text("10");
     mySpeedeb.tooltip("frames/sec");
 
-    myFrameLengthlb.move(200,100,90,30);
+    y += 50;
+    myFrameLengthlb.move(5, y, 90, 30);
     myFrameLengthlb.text("Freq Count");
-    myFrameLengtheb.move(300, 100, 50, 30);
+    myFrameLengtheb.move(100, y, 50, 30);
     myFrameLengtheb.text("10");
     myFrameLengtheb.tooltip("Number of data points in each spectrum");
+
+    y += 50;
+    myDatalb.move(5, y, 90, 30);
+    myDatalb.text("Data");
+    myDatach.move(100, y, 200, 30);
+    myDatach.add("Double");
+    myDatach.select(0);
+    myDatach.add("unsigned 16 bit integer");
+    myDatach.tooltip("Data points");
 
     myConnectbn.move(210, 20, 100, 30);
     myConnectbn.bgcolor(0x9090FF);
@@ -69,28 +85,52 @@ cGUI::cGUI()
     myForm.events().timer(
         [this](int id)
         {
-            const int myDataLength = 8;
+            int myDataLength;
+            switch (myDatach.selectedIndex())
+            {
+            case 0:
+                myDataLength = 8;
+                break;
+            case 1:
+                myDataLength = 2;
+                break;
+            }
 
             // build spectrum of requested length
             int len = atoi(myFrameLengtheb.text().c_str());
-            if( len < 1 )
+            if (len < 1)
                 len = 1;
-            std::vector<double> spectrum(len,1);
+
+            std::vector<double> spectrum(len, 1);
+            std::vector<uint16_t> spectrum16(len, 1);
 
             // add some spikes
-            for( int spike = 5; spike < len; spike += 20 )
+            for (int spike = 5; spike < len; spike += 20)
             {
                 spectrum[spike] = 5;
-                spectrum[spike+1] = 30;
-                spectrum[spike+2] = 10;
+                spectrum[spike + 1] = 30;
+                spectrum[spike + 2] = 10;
+                spectrum16[spike] = 5;
+                spectrum16[spike + 1] = 30;
+                spectrum16[spike + 2] = 10;
             }
 
             // copy to tx buffer
-            std::vector<unsigned char> msgbuf(len * myDataLength );
+            void *pdata;
+            switch (myDatach.selectedIndex())
+            {
+            case 0:
+                pdata = spectrum.data();
+                break;
+            case 1:
+                pdata = spectrum16.data();
+                break;
+            }
+            std::vector<unsigned char> msgbuf(len * myDataLength);
             memcpy(
                 msgbuf.data(),
-                spectrum.data(),
-                len * myDataLength            );
+                pdata,
+                len * myDataLength);
 
             // send the frame
             myTalker.write(msgbuf);
